@@ -19,7 +19,8 @@ services:
     depends_on:
       - db
     volumes:
-      - ./backend/app:/app/app
+      - ./backend:/app
+      - /app/.venv
     expose:
       - '8000'
 
