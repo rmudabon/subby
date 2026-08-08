@@ -4,8 +4,6 @@ from .models import subscription
 from .db.engine import get_db, engine
 from .schema.subscription import SubscriptionCreate, SubscriptionResponse
 
-subscription.Base.metadata.create_all(bind=engine) 
-
 app = FastAPI(root_path="/api")
 
 @app.get("/")
