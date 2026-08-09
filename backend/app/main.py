@@ -1,28 +1,15 @@
-from fastapi import FastAPI, Depends
-from sqlalchemy.orm import Session
-from .models import subscription
-from .db.engine import get_db, engine
-from .schema.subscription import SubscriptionCreate, SubscriptionResponse
+from fastapi import FastAPI, Request, status
+from fastapi.responses import JSONResponse
+
+from app.exceptions import DomainException
+from app.api.router import api_router
 
 app = FastAPI(root_path="/api")
+app.include_router(api_router)
 
-@app.get("/")
-def read_root():
-    return {"message": "FastAPI is running!"}
-
-@app.get("/health/")
-def health_check():
-    return {"status": "ok"}
-
-@app.get("/subscriptions/")
-def list_subscriptions(db: Session = Depends(get_db)):
-    subscriptions = db.query(subscription.Subscription).all()
-    return subscriptions
-
-@app.post("/subscriptions/", response_model=SubscriptionResponse)
-def create_subscription(data: SubscriptionCreate, db: Session = Depends(get_db)):
-    new_subscription = subscription.Subscription(name=data.name)
-    db.add(new_subscription)
-    db.commit()
-    db.refresh(new_subscription)
-    return new_subscription
+@app.exception_handler(DomainException)
+def domain_exception_handler(request: Request, exc: DomainException):
+    return JSONResponse(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        content={"detail": str(exc)}
+    )
