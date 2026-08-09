@@ -1,6 +1,6 @@
 from decimal import Decimal
 from datetime import date
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from app.models import SubscriptionInterval, SubscriptionStatus
 class SubscriptionCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=50)
@@ -11,6 +11,8 @@ class SubscriptionCreate(BaseModel):
     interval: SubscriptionInterval = SubscriptionInterval.MONTHLY
 
 class SubscriptionResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     name: str
     notes: str | None
@@ -19,6 +21,3 @@ class SubscriptionResponse(BaseModel):
     start_date: date
     interval: SubscriptionInterval
     status: SubscriptionStatus
-
-    class Config:
-        from_attributes = True
