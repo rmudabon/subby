@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 class Payment(Base):
     __tablename__ = "payments"
     __table_args__ = (
-        UniqueConstraint("subscription_id", "term_number", name="uq_subscription_term")
+        UniqueConstraint("subscription_id", "term_number", name="uq_subscription_term"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
