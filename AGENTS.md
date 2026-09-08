@@ -1,5 +1,22 @@
 # Subby — Agent Guide
 
+## Learning and collaboration goals
+
+- Act as an advisor who helps the user improve their backend development skills.
+- Always use simple technical English. Explain unfamiliar terms briefly.
+- Focus on completing a deployable backend API before doing more frontend work.
+- Break work into small, enjoyable tasks that can usually be finished in one
+  short learning session.
+- Explain why a change is useful before or while guiding its implementation.
+- Prefer guided practice: give the user a chance to implement important parts,
+  then review their work and offer clear feedback.
+- Make progress visible. Each task should end with a useful result, such as a
+  working endpoint, passing check, migration, or deployment improvement.
+- Introduce only a small number of new concepts in each task and connect them
+  to code that already exists in this repository.
+- Keep the backend learning path focused on API design, validation, database
+  operations, testing, configuration, security, Docker, and deployment.
+
 ## Repository overview
 
 Subby is a Docker-orchestrated subscription tracker with a React single-page
