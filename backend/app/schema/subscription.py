@@ -1,7 +1,7 @@
 from decimal import Decimal
 from datetime import date
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, model_validator
 
 from app.models import SubscriptionInterval, SubscriptionStatus
 
@@ -9,7 +9,7 @@ from app.models import SubscriptionInterval, SubscriptionStatus
 class SubscriptionCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=50)
     notes: str | None = Field(default=None, max_length=255)
-    amount: Decimal = Field(..., gt=0)
+    amount: Decimal = Field(..., gt=0, examples=[Decimal("9.99")])
     billing_day: int = Field(..., ge=1, le=31)
     start_date: date
     interval: SubscriptionInterval = SubscriptionInterval.MONTHLY
@@ -21,7 +21,7 @@ class SubscriptionResponse(BaseModel):
     id: int
     name: str
     notes: str | None
-    amount: Decimal
+    amount: Decimal = Field(..., examples=[Decimal("9.99")])
     billing_day: int
     start_date: date
     interval: SubscriptionInterval
@@ -31,8 +31,18 @@ class SubscriptionResponse(BaseModel):
 class SubscriptionUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=50)
     notes: str | None = Field(default=None, max_length=255)
-    amount: Decimal | None = Field(default=None, gt=0)
+    amount: Decimal | None = Field(default=None, gt=0, examples=[Decimal("9.99")])
     billing_day: int | None = Field(default=None, ge=1, le=31)
     start_date: date | None = Field(default=None)
     interval: SubscriptionInterval | None = Field(default=None)
     status: SubscriptionStatus | None = Field(default=None)
+
+    @model_validator(mode="after")
+    def reject_null_for_required_fields(self):
+        nullable_fields = {"notes"}
+
+        for field_name in self.model_fields_set - nullable_fields:
+            if getattr(self, field_name) is None:
+                raise ValueError(f"{field_name} must not be null")
+
+        return self
