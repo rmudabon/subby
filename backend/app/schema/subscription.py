@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field, ConfigDict
 
 from app.models import SubscriptionInterval, SubscriptionStatus
 
+
 class SubscriptionCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=50)
     notes: str | None = Field(default=None, max_length=255)

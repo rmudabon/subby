@@ -14,8 +14,12 @@ class Installment(Base):
     __tablename__ = "installments"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    subscription_id: Mapped[int] = mapped_column(ForeignKey("subscriptions.id", ondelete="CASCADE"), unique=True, nullable=False)
+    subscription_id: Mapped[int] = mapped_column(
+        ForeignKey("subscriptions.id", ondelete="CASCADE"), unique=True, nullable=False
+    )
     total_terms: Mapped[int] = mapped_column()
     total_amount: Mapped[Decimal] = mapped_column(Numeric(10, 2))
 
-    subscription: Mapped["Subscription"] = relationship(back_populates="installment", uselist=False)
+    subscription: Mapped["Subscription"] = relationship(
+        back_populates="installment", uselist=False
+    )

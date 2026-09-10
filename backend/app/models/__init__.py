@@ -6,11 +6,11 @@ from .payment import Payment
 from .enums import SubscriptionInterval, SubscriptionStatus, PaymentStatus
 
 __all__ = [
-    "Base", 
-    "Subscription", 
-    "Installment", 
+    "Base",
+    "Subscription",
+    "Installment",
     "Payment",
     "SubscriptionInterval",
     "SubscriptionStatus",
-    "PaymentStatus"
+    "PaymentStatus",
 ]

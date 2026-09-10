@@ -12,6 +12,7 @@ from app.db.engine import Base
 if TYPE_CHECKING:
     from .subscription import Subscription
 
+
 class Payment(Base):
     __tablename__ = "payments"
     __table_args__ = (
@@ -19,13 +20,15 @@ class Payment(Base):
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    subscription_id: Mapped[int] = mapped_column(ForeignKey("subscriptions.id", ondelete="CASCADE"), nullable=False)
+    subscription_id: Mapped[int] = mapped_column(
+        ForeignKey("subscriptions.id", ondelete="CASCADE"), nullable=False
+    )
     amount: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     status: Mapped[PaymentStatus] = mapped_column(
-        Enum(PaymentStatus, native_enum=False), 
-        default=PaymentStatus.PENDING, 
-        nullable=False
-        )
+        Enum(PaymentStatus, native_enum=False),
+        default=PaymentStatus.PENDING,
+        nullable=False,
+    )
     # Null for indefinite subscriptions
     term_number: Mapped[int] = mapped_column(default=None, nullable=True)
     paid_date: Mapped[Optional[date]] = mapped_column(default=None, nullable=True)
