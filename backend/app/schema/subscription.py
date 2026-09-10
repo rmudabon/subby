@@ -1,7 +1,10 @@
 from decimal import Decimal
 from datetime import date
+
 from pydantic import BaseModel, Field, ConfigDict
+
 from app.models import SubscriptionInterval, SubscriptionStatus
+
 class SubscriptionCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=50)
     notes: str | None = Field(default=None, max_length=255)
@@ -9,6 +12,7 @@ class SubscriptionCreate(BaseModel):
     billing_day: int = Field(..., ge=1, le=31)
     start_date: date
     interval: SubscriptionInterval = SubscriptionInterval.MONTHLY
+
 
 class SubscriptionResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -21,3 +25,13 @@ class SubscriptionResponse(BaseModel):
     start_date: date
     interval: SubscriptionInterval
     status: SubscriptionStatus
+
+
+class SubscriptionUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=50)
+    notes: str | None = Field(default=None, max_length=255)
+    amount: Decimal | None = Field(default=None, gt=0)
+    billing_day: int | None = Field(default=None, ge=1, le=31)
+    start_date: date | None = Field(default=None)
+    interval: SubscriptionInterval | None = Field(default=None)
+    status: SubscriptionStatus | None = Field(default=None)
