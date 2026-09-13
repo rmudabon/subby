@@ -49,3 +49,19 @@ def update_subscription(db: Session, subscription_id: int, data: SubscriptionUpd
     except IntegrityError as e:
         db.rollback()
         raise DomainException(f"Failed to update subscription: {str(e)}")
+
+
+def delete_subscription(db: Session, subscription_id: int):
+    existing_subscription = get_subscription(db, subscription_id)
+
+    if not existing_subscription:
+        return None
+
+    db.delete(existing_subscription)
+
+    try:
+        db.commit()
+        return True
+    except IntegrityError as e:
+        db.rollback()
+        raise DomainException(f"Failed to delete subscription: {str(e)}")

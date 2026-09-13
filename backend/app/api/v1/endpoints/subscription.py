@@ -63,3 +63,17 @@ def update_subscription(
             status_code=status.HTTP_404_NOT_FOUND, detail="Subscription not found"
         )
     return subscription
+
+
+@router.delete("/{subscription_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_subscription(
+    subscription_id: Annotated[int, Path(..., ge=1, description="Subscription ID")],
+    db: Session = Depends(get_db),
+):
+    subscription_deleted = subscription_service.delete_subscription(db, subscription_id)
+
+    if not subscription_deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Subscription not found"
+        )
+    return None
