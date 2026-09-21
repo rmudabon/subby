@@ -36,6 +36,7 @@ def test_create_subscription_success():
                     db.delete(subscription)
                     db.commit()
 
+
 def test_create_negative_amount_reject():
     payload = {
         "name": "Test Subscription",

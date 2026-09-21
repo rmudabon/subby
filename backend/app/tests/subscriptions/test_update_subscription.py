@@ -5,6 +5,7 @@ from app.main import app
 
 client = TestClient(app)
 
+
 def test_update_reject_null_amount():
     payload = {
         "amount": -1.00,
