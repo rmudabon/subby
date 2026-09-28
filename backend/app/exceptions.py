@@ -1,8 +1,6 @@
 class DomainException(Exception):
     """Base exceptions"""
 
-    pass
-
 
 class SubscriptionNotFound(DomainException):
     def __init__(self, subscription_id: int):

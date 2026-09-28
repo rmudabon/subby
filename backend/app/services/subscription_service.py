@@ -1,9 +1,9 @@
-from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
+from app.exceptions import DomainException
 from app.models import Subscription
 from app.schema.subscription import SubscriptionCreate, SubscriptionUpdate
-from app.exceptions import DomainException
 
 
 def get_paginated_subscriptions(db: Session, page: int = 1, size: int = 10):
@@ -29,7 +29,7 @@ def create_subscription(db: Session, data: SubscriptionCreate):
         return new_subscription
     except IntegrityError as e:
         db.rollback()
-        raise DomainException(f"Failed to create subscription: {str(e)}")
+        raise DomainException(f"Failed to create subscription: {e!s}")
 
 
 def update_subscription(db: Session, subscription_id: int, data: SubscriptionUpdate):
@@ -48,7 +48,7 @@ def update_subscription(db: Session, subscription_id: int, data: SubscriptionUpd
         return existing_subscription
     except IntegrityError as e:
         db.rollback()
-        raise DomainException(f"Failed to update subscription: {str(e)}")
+        raise DomainException(f"Failed to update subscription: {e!s}")
 
 
 def delete_subscription(db: Session, subscription_id: int):
@@ -64,4 +64,4 @@ def delete_subscription(db: Session, subscription_id: int):
         return True
     except IntegrityError as e:
         db.rollback()
-        raise DomainException(f"Failed to delete subscription: {str(e)}")
+        raise DomainException(f"Failed to delete subscription: {e!s}")

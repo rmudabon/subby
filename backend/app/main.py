@@ -1,8 +1,8 @@
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 
-from app.exceptions import DomainException
 from app.api.router import api_router
+from app.exceptions import DomainException
 
 app = FastAPI(root_path="/api")
 app.include_router(api_router)

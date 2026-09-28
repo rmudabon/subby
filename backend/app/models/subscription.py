@@ -1,11 +1,12 @@
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import String, Numeric, CheckConstraint, Enum
+from sqlalchemy import CheckConstraint, Enum, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.engine import Base
+
 from .enums import SubscriptionInterval, SubscriptionStatus
 
 if TYPE_CHECKING:
@@ -18,7 +19,7 @@ class Subscription(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String, nullable=False)
-    notes: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    notes: Mapped[str | None] = mapped_column(String(255), nullable=True)
     # Amount for every billing cycle
     amount: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     billing_day: Mapped[int] = mapped_column(
@@ -43,6 +44,6 @@ class Subscription(Base):
     )
 
     # 1-N
-    payments: Mapped[List["Payment"]] = relationship(
+    payments: Mapped[list["Payment"]] = relationship(
         back_populates="subscription", cascade="all, delete-orphan"
     )

@@ -1,13 +1,13 @@
-from decimal import Decimal
 from datetime import date
-from typing import TYPE_CHECKING, Optional
+from decimal import Decimal
+from typing import TYPE_CHECKING
 
-from sqlalchemy import Numeric, ForeignKey, Enum, UniqueConstraint
+from sqlalchemy import Enum, ForeignKey, Numeric, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .enums import PaymentStatus
-
 from app.db.engine import Base
+
+from .enums import PaymentStatus
 
 if TYPE_CHECKING:
     from .subscription import Subscription
@@ -31,6 +31,6 @@ class Payment(Base):
     )
     # Null for indefinite subscriptions
     term_number: Mapped[int] = mapped_column(default=None, nullable=True)
-    paid_date: Mapped[Optional[date]] = mapped_column(default=None, nullable=True)
+    paid_date: Mapped[date | None] = mapped_column(default=None, nullable=True)
 
     subscription: Mapped["Subscription"] = relationship(back_populates="payments")

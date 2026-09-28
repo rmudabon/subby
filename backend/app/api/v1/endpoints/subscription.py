@@ -1,15 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Path
 from typing import Annotated
 
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from sqlalchemy.orm import Session
 
 from app.db.engine import get_db
+from app.schema.common import PaginatedResponse
 from app.schema.subscription import (
     SubscriptionCreate,
     SubscriptionResponse,
     SubscriptionUpdate,
 )
-from app.schema.common import PaginatedResponse
 from app.services import subscription_service
 
 router = APIRouter()
@@ -17,11 +17,11 @@ router = APIRouter()
 
 @router.get("/", response_model=PaginatedResponse[SubscriptionResponse])
 def list_subscriptions(
+    db: Annotated[Session, Depends(get_db)],
     page: Annotated[int, Query(ge=1, description="Page number")] = 1,
     size: Annotated[
         int, Query(ge=1, le=50, description="Number of items per page")
     ] = 10,
-    db: Session = Depends(get_db),
 ):
     items, total = subscription_service.get_paginated_subscriptions(db, page, size)
     return PaginatedResponse(items=items, total=total, page=page, size=size)
@@ -30,7 +30,7 @@ def list_subscriptions(
 @router.get("/{subscription_id}", response_model=SubscriptionResponse)
 def get_subscription(
     subscription_id: Annotated[int, Path(..., ge=1, description="Subscription ID")],
-    db: Session = Depends(get_db),
+    db: Annotated[Session, Depends(get_db)],
 ):
     subscription = subscription_service.get_subscription(db, subscription_id)
     if not subscription:
@@ -43,7 +43,9 @@ def get_subscription(
 @router.post(
     "/", response_model=SubscriptionResponse, status_code=status.HTTP_201_CREATED
 )
-def create_subscription(payload: SubscriptionCreate, db: Session = Depends(get_db)):
+def create_subscription(
+    payload: SubscriptionCreate, db: Annotated[Session, Depends(get_db)]
+):
     subscription = subscription_service.create_subscription(db, payload)
     return subscription
 
@@ -52,7 +54,7 @@ def create_subscription(payload: SubscriptionCreate, db: Session = Depends(get_d
 def update_subscription(
     subscription_id: Annotated[int, Path(..., ge=1, description="Subscription ID")],
     payload: SubscriptionUpdate,
-    db: Session = Depends(get_db),
+    db: Annotated[Session, Depends(get_db)],
 ):
     subscription = subscription_service.update_subscription(
         db, subscription_id, payload
@@ -68,7 +70,7 @@ def update_subscription(
 @router.delete("/{subscription_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_subscription(
     subscription_id: Annotated[int, Path(..., ge=1, description="Subscription ID")],
-    db: Session = Depends(get_db),
+    db: Annotated[Session, Depends(get_db)],
 ):
     subscription_deleted = subscription_service.delete_subscription(db, subscription_id)
 
@@ -76,4 +78,3 @@ def delete_subscription(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Subscription not found"
         )
-    return None

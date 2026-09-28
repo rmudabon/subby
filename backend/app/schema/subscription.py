@@ -1,7 +1,7 @@
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
 
-from pydantic import BaseModel, Field, ConfigDict, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.models import SubscriptionInterval, SubscriptionStatus
 
