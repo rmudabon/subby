@@ -22,6 +22,25 @@ services:
       - test
     tmpfs:
       - /var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d subby_test"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+
+  test-runner:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql://user:password@test-db:5432/subby_test
+    depends_on:
+      test-db:
+        condition: service_healthy
+    profiles:
+      - test
+    volumes:
+      - ./backend:/app
+      - /app/.venv
+    command: ["pytest", "-q"]
 
   backend:
     build: ./backend
