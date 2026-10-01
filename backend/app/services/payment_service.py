@@ -27,7 +27,7 @@ def update_payment(db: Session, payment_id: int, data: PaymentUpdate):
     existing_payment = get_payment(db, payment_id)
 
     if existing_payment is None:
-        raise DomainException(f"Payment {payment_id} not found.")
+        return None
 
     updates = data.model_dump(exclude_unset=True)
     for key, value in updates.items():

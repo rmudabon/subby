@@ -8,13 +8,24 @@ from app.models import PaymentStatus, Subscription
 client = TestClient(app)
 
 
-def test_payment_missing_returns_404():
-    response = client.get("/v1/payments/999999")
+def test_payment_update_missing_returns_404():
+    dummy_payment_id = 99999
+    patch_payload = {"status": PaymentStatus.PENDING.value}
+
+    response = client.patch(f"/v1/payments/{dummy_payment_id}", json=patch_payload)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json() == {"detail": "Payment not found"}
 
 
-def test_payment_existing_returns_200():
+def test_payment_update_status_null_returns_422():
+    dummy_payment_id = 99999
+    patch_payload = {"status": None}
+
+    response = client.patch(f"/v1/payments/{dummy_payment_id}", json=patch_payload)
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+
+def test_payment_update_returns_paid():
     payload = {
         "name": "Test Subscription",
         "amount": "249.99",
@@ -39,13 +50,11 @@ def test_payment_existing_returns_200():
         assert payment_response.status_code == status.HTTP_201_CREATED
         payment_id = payment_response.json()["id"]
 
-        payment_get_response = client.get(f"/v1/payments/{payment_id}")
-        assert payment_get_response.status_code == status.HTTP_200_OK
-        payment = payment_get_response.json()
-        assert payment["id"] == payment_id
-        assert payment["subscription_id"] == subscription_id
-        assert payment["amount"] == payload["amount"]
-        assert payment["status"] == PaymentStatus.PENDING.value
+        patch_payload = {"status": PaymentStatus.PAID.value}
+        patch_response = client.patch(f"/v1/payments/{payment_id}", json=patch_payload)
+        assert patch_response.status_code == status.HTTP_200_OK
+        assert patch_response.json()["status"] == PaymentStatus.PAID.value
+
     finally:
         with SessionLocal() as db:
             if subscription_id is not None:
