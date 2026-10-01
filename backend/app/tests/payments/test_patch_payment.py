@@ -7,6 +7,13 @@ from app.models import PaymentStatus, Subscription
 
 client = TestClient(app)
 
+test_subscription_payload = {
+    "name": "Test Subscription",
+    "amount": "249.99",
+    "billing_day": 12,
+    "start_date": "2026-09-19",
+}
+
 
 def test_payment_update_missing_returns_404():
     dummy_payment_id = 99999
@@ -26,24 +33,19 @@ def test_payment_update_status_null_returns_422():
 
 
 def test_payment_update_returns_paid():
-    payload = {
-        "name": "Test Subscription",
-        "amount": "249.99",
-        "billing_day": 12,
-        "start_date": "2026-09-19",
-    }
-
     subscription_id = None
     payment_id = None
 
     try:
-        subscription_response = client.post("/v1/subscriptions/", json=payload)
+        subscription_response = client.post(
+            "/v1/subscriptions/", json=test_subscription_payload
+        )
         assert subscription_response.status_code == status.HTTP_201_CREATED
         subscription_id = subscription_response.json()["id"]
 
         payment_payload = {
             "subscription_id": subscription_id,
-            "amount": payload["amount"],
+            "amount": test_subscription_payload["amount"],
         }
 
         payment_response = client.post("/v1/payments/", json=payment_payload)
@@ -54,6 +56,40 @@ def test_payment_update_returns_paid():
         patch_response = client.patch(f"/v1/payments/{payment_id}", json=patch_payload)
         assert patch_response.status_code == status.HTTP_200_OK
         assert patch_response.json()["status"] == PaymentStatus.PAID.value
+
+    finally:
+        with SessionLocal() as db:
+            if subscription_id is not None:
+                subscription = db.get(Subscription, subscription_id)
+                if subscription is not None:
+                    db.delete(subscription)
+                    db.commit()
+
+
+def test_payment_paid_date_success():
+    subscription_id = None
+    payment_id = None
+
+    try:
+        subscription_response = client.post(
+            "/v1/subscriptions/", json=test_subscription_payload
+        )
+        assert subscription_response.status_code == status.HTTP_201_CREATED
+        subscription_id = subscription_response.json()["id"]
+
+        payment_payload = {
+            "subscription_id": subscription_id,
+            "amount": test_subscription_payload["amount"],
+        }
+
+        payment_response = client.post("/v1/payments/", json=payment_payload)
+        assert payment_response.status_code == status.HTTP_201_CREATED
+        payment_id = payment_response.json()["id"]
+
+        patch_payload = {"paid_date": "2026-10-01"}
+        patch_response = client.patch(f"/v1/payments/{payment_id}", json=patch_payload)
+        assert patch_response.status_code == status.HTTP_200_OK
+        assert patch_response.json()["paid_date"] == patch_payload["paid_date"]
 
     finally:
         with SessionLocal() as db:
