@@ -46,13 +46,81 @@ def test_list_payment_existing_returns_correct_data():
         assert payment_response.status_code == status.HTTP_201_CREATED
         payment_id = payment_response.json()["id"]
 
-        payment_list_response = client.get(f"/v1/payments/?subscription_id={subscription_id}")
+        payment_list_response = client.get(
+            f"/v1/payments/?subscription_id={subscription_id}"
+        )
         assert payment_list_response.status_code == status.HTTP_200_OK
         payments = payment_list_response.json()
         assert payments["page"] == DEFAULT_PAGE_NUMBER
         assert payments["size"] == DEFAULT_PAGE_SIZE
-        assert payments["total"] >= 1
-        assert any(payment["id"] == payment_id for payment in payments["items"])
+        assert payments["total"] == 1
+        assert len(payments["items"]) == 1
+        assert payments["items"][0]["id"] == payment_id
+    finally:
+        with SessionLocal() as db:
+            if subscription_id is not None:
+                subscription = db.get(Subscription, subscription_id)
+                if subscription is not None:
+                    db.delete(subscription)
+                    db.commit()
+
+
+def test_list_payment_patched_status_returns_correct_filter():
+    payload = {
+        "name": "Test Subscription",
+        "amount": "249.99",
+        "billing_day": 12,
+        "start_date": "2026-09-19",
+    }
+
+    subscription_id = None
+    payment_id = None
+
+    try:
+        subscription_response = client.post("/v1/subscriptions/", json=payload)
+        assert subscription_response.status_code == status.HTTP_201_CREATED
+        subscription_id = subscription_response.json()["id"]
+
+        payment_payload = {
+            "subscription_id": subscription_id,
+            "amount": payload["amount"],
+        }
+
+        payment_response = client.post("/v1/payments/", json=payment_payload)
+        assert payment_response.status_code == status.HTTP_201_CREATED
+        payment_id = payment_response.json()["id"]
+
+        payment_patch_payload = {
+            "status": "paid",
+            "paid_date": "2026-10-03",
+        }
+
+        payment_patch_response = client.patch(
+            f"/v1/payments/{payment_id}", json=payment_patch_payload
+        )
+        assert payment_patch_response.status_code == status.HTTP_200_OK
+
+        pending_response = client.get(
+            f"/v1/payments/?subscription_id={subscription_id}&status=pending"
+        )
+        assert pending_response.status_code == status.HTTP_200_OK
+        pending_payments = pending_response.json()
+        assert pending_payments["page"] == DEFAULT_PAGE_NUMBER
+        assert pending_payments["size"] == DEFAULT_PAGE_SIZE
+        assert pending_payments["total"] == 0
+        assert pending_payments["items"] == []
+
+        payment_list_response = client.get(
+            f"/v1/payments/?subscription_id={subscription_id}&status=paid"
+        )
+        assert payment_list_response.status_code == status.HTTP_200_OK
+        payments = payment_list_response.json()
+        assert payments["page"] == DEFAULT_PAGE_NUMBER
+        assert payments["size"] == DEFAULT_PAGE_SIZE
+        assert payments["total"] == 1
+        assert len(payments["items"]) == 1
+        assert payments["items"][0]["id"] == payment_id
+        assert payments["items"][0]["status"] == "paid"
     finally:
         with SessionLocal() as db:
             if subscription_id is not None:
