@@ -27,7 +27,7 @@ def get_payment(
 @router.get("/", response_model=PaginatedResponse[PaymentResponse])
 def list_payments(
     db: Annotated[Session, Depends(get_db)],
-    subscription_id: Annotated[int | None, Query(description="Subscription ID")] = None,
+    subscription_id: Annotated[int | None, Query(ge=1, description="Subscription ID")] = None,
     status: Annotated[
         PaymentStatus | None, Query(description="Status", alias="status")
     ] = None,
