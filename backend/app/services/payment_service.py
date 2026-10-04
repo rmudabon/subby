@@ -8,7 +8,7 @@ from app.schema.payment import PaymentCreate, PaymentUpdate
 
 
 def get_payment(db: Session, payment_id: int):
-    return db.query(Payment).filter(Payment.id == payment_id).first()
+    return db.get(Payment, payment_id)
 
 
 def get_paginated_payments(
@@ -55,6 +55,14 @@ def update_payment(db: Session, payment_id: int, data: PaymentUpdate):
         return None
 
     updates = data.model_dump(exclude_unset=True)
+    new_status = updates.get("status", existing_payment.status)
+    new_paid_date = updates.get("paid_date", existing_payment.paid_date)
+    if new_paid_date and new_status != PaymentStatus.PAID:
+        raise DomainException(
+            "Payment must also be updated to paid if sending paid date."
+        )
+    if new_status == PaymentStatus.PAID and new_paid_date is None:
+        raise DomainException("Paid date must be present if updating status to paid.")
     for key, value in updates.items():
         setattr(existing_payment, key, value)
     try:

@@ -28,7 +28,6 @@ def test_create_payment_success():
         payment_payload = {
             "subscription_id": subscription_id,
             "amount": "249.99",
-            "paid_date": "2026-09-19",
         }
 
         try:
@@ -42,7 +41,6 @@ def test_create_payment_success():
                 == payment_payload["subscription_id"]
             )
             assert payment_response_body["amount"] == payment_payload["amount"]
-            assert payment_response_body["paid_date"] == payment_payload["paid_date"]
             assert payment_response_body["status"] == PaymentStatus.PENDING.value
             assert payment_response_body["term_number"] is None
         finally:

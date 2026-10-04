@@ -32,7 +32,7 @@ def test_payment_update_status_null_returns_422():
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 
-def test_payment_update_returns_paid():
+def test_payment_update_status_returns_paid():
     subscription_id = None
     payment_id = None
 
@@ -52,10 +52,12 @@ def test_payment_update_returns_paid():
         assert payment_response.status_code == status.HTTP_201_CREATED
         payment_id = payment_response.json()["id"]
 
-        patch_payload = {"status": PaymentStatus.PAID.value}
+        patch_payload = {"status": PaymentStatus.PAID.value, "paid_date": "2026-10-04"}
         patch_response = client.patch(f"/v1/payments/{payment_id}", json=patch_payload)
         assert patch_response.status_code == status.HTTP_200_OK
-        assert patch_response.json()["status"] == PaymentStatus.PAID.value
+        patched_payment = patch_response.json()
+        assert patched_payment["status"] == PaymentStatus.PAID.value
+        assert patched_payment["paid_date"] == patch_payload["paid_date"]
 
     finally:
         with SessionLocal() as db:
@@ -66,7 +68,7 @@ def test_payment_update_returns_paid():
                     db.commit()
 
 
-def test_payment_paid_date_success():
+def test_payment_paid_status_requires_date():
     subscription_id = None
     payment_id = None
 
@@ -86,10 +88,50 @@ def test_payment_paid_date_success():
         assert payment_response.status_code == status.HTTP_201_CREATED
         payment_id = payment_response.json()["id"]
 
-        patch_payload = {"paid_date": "2026-10-01"}
+        patch_payload = {"status": "paid"}
         patch_response = client.patch(f"/v1/payments/{payment_id}", json=patch_payload)
-        assert patch_response.status_code == status.HTTP_200_OK
-        assert patch_response.json()["paid_date"] == patch_payload["paid_date"]
+        assert patch_response.status_code == status.HTTP_400_BAD_REQUEST
+        assert (
+            patch_response.json()["detail"]
+            == "Paid date must be present if updating status to paid."
+        )
+
+    finally:
+        with SessionLocal() as db:
+            if subscription_id is not None:
+                subscription = db.get(Subscription, subscription_id)
+                if subscription is not None:
+                    db.delete(subscription)
+                    db.commit()
+
+
+def test_payment_paid_date_requires_status():
+    subscription_id = None
+    payment_id = None
+
+    try:
+        subscription_response = client.post(
+            "/v1/subscriptions/", json=test_subscription_payload
+        )
+        assert subscription_response.status_code == status.HTTP_201_CREATED
+        subscription_id = subscription_response.json()["id"]
+
+        payment_payload = {
+            "subscription_id": subscription_id,
+            "amount": test_subscription_payload["amount"],
+        }
+
+        payment_response = client.post("/v1/payments/", json=payment_payload)
+        assert payment_response.status_code == status.HTTP_201_CREATED
+        payment_id = payment_response.json()["id"]
+
+        patch_payload = {"paid_date": "2026-10-04"}
+        patch_response = client.patch(f"/v1/payments/{payment_id}", json=patch_payload)
+        assert patch_response.status_code == status.HTTP_400_BAD_REQUEST
+        assert (
+            patch_response.json()["detail"]
+            == "Payment must also be updated to paid if sending paid date."
+        )
 
     finally:
         with SessionLocal() as db:
