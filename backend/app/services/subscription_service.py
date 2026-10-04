@@ -1,3 +1,4 @@
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -7,17 +8,22 @@ from app.schema.subscription import SubscriptionCreate, SubscriptionUpdate
 
 
 def get_paginated_subscriptions(db: Session, page: int = 1, size: int = 10):
-    subscriptions = db.query(Subscription).offset((page - 1) * size).limit(size).all()
-    total = db.query(Subscription).count()
+    subscription_query = (
+        select(Subscription)
+        .order_by(Subscription.id)
+        .offset((page - 1) * size)
+        .limit(size)
+    )
+    total_query = select(func.count()).select_from(Subscription)
+
+    subscriptions = db.scalars(subscription_query).all()
+    total = db.scalar(total_query)
 
     return (subscriptions, total)
 
 
 def get_subscription(db: Session, subscription_id: int):
-    subscription = (
-        db.query(Subscription).filter(Subscription.id == subscription_id).first()
-    )
-    return subscription
+    return db.get(Subscription, subscription_id)
 
 
 def create_subscription(db: Session, data: SubscriptionCreate):
@@ -35,7 +41,7 @@ def create_subscription(db: Session, data: SubscriptionCreate):
 def update_subscription(db: Session, subscription_id: int, data: SubscriptionUpdate):
     existing_subscription = get_subscription(db, subscription_id)
 
-    if not existing_subscription:
+    if existing_subscription is None:
         return None
 
     updates = data.model_dump(exclude_unset=True)
@@ -54,7 +60,7 @@ def update_subscription(db: Session, subscription_id: int, data: SubscriptionUpd
 def delete_subscription(db: Session, subscription_id: int):
     existing_subscription = get_subscription(db, subscription_id)
 
-    if not existing_subscription:
+    if existing_subscription is None:
         return None
 
     db.delete(existing_subscription)
