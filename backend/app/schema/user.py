@@ -3,7 +3,6 @@ from pydantic import (
     ConfigDict,
     EmailStr,
     Field,
-    SecretStr,
     computed_field,
     model_validator,
 )
@@ -15,7 +14,6 @@ class UserCreate(BaseModel):
     email: EmailStr = Field(...)
     first_name: str = Field(..., min_length=1, max_length=50)
     last_name: str = Field(..., min_length=1, max_length=50)
-    password: SecretStr = Field(...)
 
 
 class UserUpdate(BaseModel):
