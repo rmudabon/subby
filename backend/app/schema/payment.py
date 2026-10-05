@@ -5,6 +5,8 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.models.enums import PaymentStatus
 
+from .helpers import find_invalid_null_fields
+
 
 class PaymentCreate(BaseModel):
     subscription_id: int = Field(..., ge=1)
@@ -22,9 +24,10 @@ class PaymentUpdate(BaseModel):
     def reject_null_for_required_fields(self):
         nullable_fields = {"paid_date"}
 
-        for field_name in self.model_fields_set - nullable_fields:
-            if getattr(self, field_name) is None:
-                raise ValueError(f"{field_name} must not be null")
+        invalid_fields = find_invalid_null_fields(self, nullable_fields)
+        if invalid_fields:
+            field_names = ", ".join(sorted(invalid_fields))
+            raise ValueError(f"{field_names} must not be null")
 
         return self
 

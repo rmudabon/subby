@@ -5,6 +5,8 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.models import SubscriptionInterval, SubscriptionStatus
 
+from .helpers import find_invalid_null_fields
+
 
 class SubscriptionCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=50)
@@ -41,8 +43,9 @@ class SubscriptionUpdate(BaseModel):
     def reject_null_for_required_fields(self):
         nullable_fields = {"notes"}
 
-        for field_name in self.model_fields_set - nullable_fields:
-            if getattr(self, field_name) is None:
-                raise ValueError(f"{field_name} must not be null")
+        invalid_fields = find_invalid_null_fields(self, nullable_fields)
+        if invalid_fields:
+            field_names = ", ".join(sorted(invalid_fields))
+            raise ValueError(f"{field_names} must not be null")
 
         return self
