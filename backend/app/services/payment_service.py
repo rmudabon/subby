@@ -32,7 +32,7 @@ def get_paginated_payments(
     count = db.scalar(payment_count_query)
     payments = db.scalars(payment_query).all()
 
-    return (payments, count)
+    return (list(payments), count if count is not None else 0)
 
 
 def create_payment(db: Session, data: PaymentCreate):
