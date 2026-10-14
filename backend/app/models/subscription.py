@@ -2,7 +2,7 @@ from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import CheckConstraint, Enum, Numeric, String
+from sqlalchemy import CheckConstraint, ForeignKey, Enum, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.engine import Base
@@ -12,6 +12,7 @@ from .enums import SubscriptionInterval, SubscriptionStatus
 if TYPE_CHECKING:
     from .installment import Installment
     from .payment import Payment
+    from .user import User
 
 
 class Subscription(Base):
@@ -37,13 +38,15 @@ class Subscription(Base):
         default=SubscriptionStatus.ACTIVE,
         nullable=False,
     )
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE", name="fk_subscriptions_user_id_users"), nullable=True)
 
     # 1-1
     installment: Mapped[Optional["Installment"]] = relationship(
         back_populates="subscription", uselist=False, cascade="all, delete-orphan"
     )
+    user: Mapped["User"] = relationship(back_populates="subscriptions")
 
     # 1-N
-    payments: Mapped[list["Payment"]] = relationship(
+    payments: Mapped[Optional[list["Payment"]]] = relationship(
         back_populates="subscription", cascade="all, delete-orphan"
     )
