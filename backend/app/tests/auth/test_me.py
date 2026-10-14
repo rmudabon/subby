@@ -25,7 +25,7 @@ def fake_firebase(monkeypatch):
 def test_me_ok():
     response = client.get("/v1/auth/me", headers={"Authorization": "Bearer test-user"})
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == {"firebase_uid": "test-user-123", "display_name": "Test User", "email": "test@mail.com"}
+    assert response.json() == {"display_name": "Test User", "email": "test@mail.com"}
 
 
 @pytest.mark.usefixtures("fake_firebase")
