@@ -18,7 +18,15 @@ def fake_firebase(monkeypatch):
     monkeypatch.setattr(
         auth, "verify_id_token", lambda token, app: {"uid": "test-user-123"}
     )
-    monkeypatch.setattr(user_service, "find_user", lambda db, token: {"firebase_uid": "test-user-123", "display_name": "Test User", "email": "test@mail.com"})
+    monkeypatch.setattr(
+        user_service,
+        "find_user",
+        lambda db, token: {
+            "firebase_uid": "test-user-123",
+            "display_name": "Test User",
+            "email": "test@mail.com",
+        },
+    )
 
 
 @pytest.mark.usefixtures("fake_firebase")

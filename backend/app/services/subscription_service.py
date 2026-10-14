@@ -7,14 +7,21 @@ from app.models import Subscription
 from app.schema.subscription import SubscriptionCreate, SubscriptionUpdate
 
 
-def get_paginated_subscriptions(db: Session, page: int = 1, size: int = 10):
+def get_paginated_subscriptions(
+    db: Session, user_id: int, page: int = 1, size: int = 10
+):
     subscription_query = (
         select(Subscription)
+        .where(Subscription.user_id == user_id)
         .order_by(Subscription.id)
         .offset((page - 1) * size)
         .limit(size)
     )
-    total_query = select(func.count()).select_from(Subscription)
+    total_query = (
+        select(func.count())
+        .select_from(Subscription)
+        .where(Subscription.user_id == user_id)
+    )
 
     subscriptions = db.scalars(subscription_query).all()
     total = db.scalar(total_query)

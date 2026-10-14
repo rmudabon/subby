@@ -3,7 +3,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from sqlalchemy.orm import Session
 
+from app.auth.dependencies import get_current_user
 from app.db.engine import get_db
+from app.models import User
 from app.schema.common import PaginatedResponse
 from app.schema.subscription import (
     SubscriptionCreate,
@@ -18,12 +20,15 @@ router = APIRouter()
 @router.get("/", response_model=PaginatedResponse[SubscriptionResponse])
 def list_subscriptions(
     db: Annotated[Session, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
     page: Annotated[int, Query(ge=1, description="Page number")] = 1,
     size: Annotated[
         int, Query(ge=1, le=50, description="Number of items per page")
     ] = 10,
 ):
-    items, total = subscription_service.get_paginated_subscriptions(db, page, size)
+    items, total = subscription_service.get_paginated_subscriptions(
+        db, user.id, page, size
+    )
     return PaginatedResponse(items=items, total=total, page=page, size=size)
 
 
