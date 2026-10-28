@@ -29,8 +29,12 @@ def get_paginated_subscriptions(
     return (subscriptions, total)
 
 
-def get_subscription(db: Session, subscription_id: int):
-    return db.get(Subscription, subscription_id)
+def get_subscription(db: Session, user_id: int, subscription_id: int):
+    query = select(Subscription).where(
+        Subscription.id == subscription_id, Subscription.user_id == user_id
+    )
+    subscription = db.scalar(query)
+    return subscription
 
 
 def create_subscription(db: Session, data: SubscriptionCreate):

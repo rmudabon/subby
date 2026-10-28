@@ -1,11 +1,10 @@
+from firebase_admin import auth
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.exceptions import DomainException
 from app.models import User
-
-from firebase_admin import auth
 
 
 def find_user(db: Session, uid: str):
@@ -22,15 +21,9 @@ def find_user(db: Session, uid: str):
             raise DomainException("Firebase account has no email.")
 
         display_name = (
-            new_user_info.display_name
-            or email.split("@", maxsplit=1)[0]
-            or "New User"
+            new_user_info.display_name or email.split("@", maxsplit=1)[0] or "New User"
         )
-        new_user = User(
-            firebase_uid=uid,
-            email=email,
-            display_name=display_name
-        )
+        new_user = User(firebase_uid=uid, email=email, display_name=display_name)
         db.add(new_user)
         try:
             db.commit()
@@ -39,5 +32,5 @@ def find_user(db: Session, uid: str):
         except IntegrityError as e:
             db.rollback()
             raise DomainException(f"Failed to create user: {e!s}") from e
-        
+
     return existing_user

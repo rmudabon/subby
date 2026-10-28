@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 
+from .endpoints.auth import router as auth_router
 from .endpoints.payment import router as payment_router
 from .endpoints.subscription import router as subscription_router
-from .endpoints.auth import router as auth_router
 
 api_router = APIRouter()
 

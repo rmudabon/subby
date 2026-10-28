@@ -1,8 +1,9 @@
 from typing import TYPE_CHECKING
 
-from app.db.engine import Base
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.db.engine import Base
 
 if TYPE_CHECKING:
     from .subscription import Subscription

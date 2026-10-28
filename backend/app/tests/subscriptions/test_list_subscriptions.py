@@ -1,6 +1,5 @@
 from datetime import date
 from decimal import Decimal
-from types import SimpleNamespace
 
 from fastapi import status
 from fastapi.testclient import TestClient
@@ -9,16 +8,13 @@ from app.auth.dependencies import get_current_user
 from app.db.engine import SessionLocal
 from app.main import app
 from app.models import Subscription, User
+from app.tests.common import fake_user
 
 DEFAULT_PAGE_NUMBER = 1
 DEFAULT_PAGE_SIZE = 10
 
 
 client = TestClient(app)
-
-
-def fake_user(fake_id: int):
-    return SimpleNamespace(id=fake_id)
 
 
 def test_list_subscription_user_missing_returns_401():
@@ -76,6 +72,7 @@ def test_list_subscription_existing_returns_200():
                     db.commit()
         app.dependency_overrides.pop(get_current_user, None)
 
+
 def test_list_subscription_two_users_returns_unique_items():
     FIRST_USER_INDEX = 0
     SECOND_USER_INDEX = 1
@@ -105,21 +102,23 @@ def test_list_subscription_two_users_returns_unique_items():
                 user_id=user_one.id,
             )
             subscription_two = Subscription(
-                    name="Test Subscription Two",
-                    amount=Decimal("299.99"),
-                    billing_day=12,
-                    start_date=date(2026, 9, 19),
-                    user_id=user_two.id,
-                )
+                name="Test Subscription Two",
+                amount=Decimal("299.99"),
+                billing_day=12,
+                start_date=date(2026, 9, 19),
+                user_id=user_two.id,
+            )
             subscriptions = [subscription_one, subscription_two]
             db.add_all(subscriptions)
             db.flush()
             subscription_ids = [subscription.id for subscription in subscriptions]
             user_ids = [user.id for user in users]
             db.commit()
-            
+
         # User 1
-        app.dependency_overrides[get_current_user] = lambda: fake_user(user_ids[FIRST_USER_INDEX])
+        app.dependency_overrides[get_current_user] = lambda: fake_user(
+            user_ids[FIRST_USER_INDEX]
+        )
         subscription_get_response = client.get("/v1/subscriptions/")
         assert subscription_get_response.status_code == status.HTTP_200_OK
         subscription_list = subscription_get_response.json()
@@ -129,7 +128,9 @@ def test_list_subscription_two_users_returns_unique_items():
         assert len(subscription_list["items"]) == 1
         assert subscription_list["items"][0]["id"] == subscription_ids[FIRST_USER_INDEX]
 
-        app.dependency_overrides[get_current_user] = lambda: fake_user(user_ids[SECOND_USER_INDEX])
+        app.dependency_overrides[get_current_user] = lambda: fake_user(
+            user_ids[SECOND_USER_INDEX]
+        )
         subscription_get_response = client.get("/v1/subscriptions/")
         assert subscription_get_response.status_code == status.HTTP_200_OK
         subscription_list = subscription_get_response.json()
@@ -137,7 +138,9 @@ def test_list_subscription_two_users_returns_unique_items():
         assert subscription_list["size"] == DEFAULT_PAGE_SIZE
         assert subscription_list["total"] == 1
         assert len(subscription_list["items"]) == 1
-        assert subscription_list["items"][0]["id"] == subscription_ids[SECOND_USER_INDEX]
+        assert (
+            subscription_list["items"][0]["id"] == subscription_ids[SECOND_USER_INDEX]
+        )
     finally:
         with SessionLocal() as db:
             if subscription_ids is not None:

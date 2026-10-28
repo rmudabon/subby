@@ -35,9 +35,10 @@ def list_subscriptions(
 @router.get("/{subscription_id}", response_model=SubscriptionResponse)
 def get_subscription(
     subscription_id: Annotated[int, Path(..., ge=1, description="Subscription ID")],
+    user: Annotated[User, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ):
-    subscription = subscription_service.get_subscription(db, subscription_id)
+    subscription = subscription_service.get_subscription(db, user.id, subscription_id)
     if not subscription:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Subscription not found"
